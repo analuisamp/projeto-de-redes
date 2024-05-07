@@ -28,11 +28,11 @@ cliente até que o usuário selecione a opção “Sair”.
 
 ### Para rodar o Cliente UDP
 ```bash
-python3 cliente_udp.py
+python3 udp.py
 ```
 
 ### Para rodar o Cliente RAW
 ```bash
-sudo python3 cliente_raw.py
+sudo python3 raw.py
 ```
 
