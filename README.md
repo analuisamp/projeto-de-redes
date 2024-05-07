@@ -22,7 +22,7 @@ mensagem.
 - Em seguida o cliente deverá exibir a resposta recebida pelo servidor de uma forma adequada
 para a legibilidade pelo usuário final.
 
--Por fim, o programa cliente deverá aguardar novas requisições do
+- Por fim, o programa cliente deverá aguardar novas requisições do
 cliente até que o usuário selecione a opção “Sair”.
 
 
