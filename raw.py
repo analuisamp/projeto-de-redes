@@ -1,3 +1,11 @@
+#############################################################################
+# PROJETO DE REDES
+# GRUPO: Ana Luisa Miranda Pessoa, Beatriz Saori Kyohara, Helio Lima Correia II
+# PROFESSOR: Fernando Menezes Matos
+# socket RAW com protocolo IPPROTO_UDP
+#############################################################################
+
+
 import types
 import random
 import socket
@@ -8,7 +16,7 @@ consts.MOTIVATIONAL_MESSAGE = 2
 consts.SERVER_RESPONSE_COUNT = 3
 
 IP_DESTINO = '15.228.191.109'
-PORTA_DESTINO = 50000
+PORTA_DESTINO = 0xC350
 
 def splitNumberInto2Bytes(number):
     '''Divide um número em dois bytes.'''
@@ -22,12 +30,12 @@ def transformIPStringToBytes(ip):
     return bytes(int_list)
 
 def displayOptions():
-    '''Exibe as opções de requisição.'''
-    print("Opções de solicitação:")
-    print("1 -> Data e hora")
-    print("2 -> Uma mensagem motivacional para o final do semestre")
-    print("3 -> A quantidade de respostas emitidas pelo servidor")
-    print("4 -> Sair")
+    '''Exibe as opções de requisição do usuário.'''
+    print("Opções de solicitação para você usuário:")
+    print("1 ==> Exibe a Data e hora atual")
+    print("2 ==> Exibe uma mensagem motivacional para o final do semestre")
+    print("3 ==> Exibe a quantidade de respostas emitidas pelo servidor até o momento")
+    print("4 ==> Sair")
 
 def createRequest(type, identifier):
     '''Cria uma mensagem de requisição com base no tipo e no identificador.'''
@@ -41,7 +49,7 @@ def createRequest(type, identifier):
         case consts.SERVER_RESPONSE_COUNT:
             byte1 = byte1 | 0b0010
         case _:
-            byte1 =byte1|0b0011
+            byte1 = byte1 | 0b0011
 
     message = bytes([byte1, bytes_identifier[0], bytes_identifier[1]])
     return message
@@ -51,7 +59,7 @@ def generateRandomIdentifier():
     return random.randint(1, 65535)
 
 def add16BitWords(word1, word2):
-    '''Adiciona duas palavras de 16 bits.'''
+    '''Adiciona duas palavras de 16 bits e caso ela exceda corrije com o Carry.'''
     result = word1 + word2
     while result.bit_length() > 16:
         carry = result >> 16
@@ -65,8 +73,8 @@ def calculateChecksum(byte_list):
     if list_size % 2 != 0:
         byte_list += bytes([0])
     list_size = len(byte_list)
-    index = 0
-    result = 0
+    index = 0x0000
+    result = 0x0000
     for _ in range(int(list_size / 4)):
         result = add16BitWords(result, add16BitWords(byte_list[index] << 8 | byte_list[index + 1],
                                                      byte_list[index + 2] << 8 | byte_list[index + 3]))
@@ -79,7 +87,7 @@ def bytesToString(byte_list):
 
 def bytesToInt(byte_list):
     '''Converte uma lista de bytes em um número inteiro.'''
-    return int.from_bytes(bytes(byte_list), byteorder='big')
+    return int.from_bytes(bytes(byte_list), byteorder = 'big')
 
 def decodeResponse(data):
     '''Decodifica os dados da resposta.'''
@@ -97,19 +105,19 @@ def decodeResponse(data):
 
 def assembleUDPHeader(source_port, destination_port, udp_packet_size, udp_checksum):
     '''Monta o cabeçalho UDP.'''
-    # Convertendo números em bytes
+    ''' Convertendo números em bytes '''
     source_port = splitNumberInto2Bytes(source_port)
     destination_port = splitNumberInto2Bytes(destination_port)
     udp_packet_size = splitNumberInto2Bytes(udp_packet_size)
     udp_checksum = splitNumberInto2Bytes(udp_checksum)
 
-    # Monta o cabeçalho UDP
+    ''' Monta o cabeçalho UDP '''
     udp_header = bytes([source_port[0], source_port[1], destination_port[0], destination_port[1], udp_packet_size[0], udp_packet_size[1], udp_checksum[0], udp_checksum[1]])
     return udp_header
 
 def assemblePseudoHeader(source_ip, destination_ip, udp_packet_size):
-    '''Monta o pseudo cabeçalho.'''
-    protocol = socket.IPPROTO_UDP.to_bytes(1, byteorder='big')
+    '''Monta o pseudo cabeçalho solicitado.'''
+    protocol = socket.IPPROTO_UDP.to_bytes(1, byteorder = 'big')
     source_ip = transformIPStringToBytes(source_ip)
     destination_ip = transformIPStringToBytes(destination_ip)
     zero = 0b00000000
@@ -119,7 +127,8 @@ def assemblePseudoHeader(source_ip, destination_ip, udp_packet_size):
 
 def extractPayload(data):
     '''Extrai a carga útil dos dados recebidos.'''
-    payload = data[28:]   # Ignorar os primeiros 28 bytes para obter a carga útil
+    '''Ignorar os primeiros 28 bytes para obter a carga útil'''
+    payload = data[28:]
     return payload
 
 def findSourcePort():
@@ -135,20 +144,21 @@ def findSourceIP():
 
 
 def main():
-    print("CLIENTE RAW")
+    print("RAW CLIENT VIP")
     displayOptions()
     while True:
-        tipo = input("Insira a solicitação: ")
+        tipo = input("Insira uma solicitação válida: ")
         if (tipo == '4'):
-            print("Encerrando o programa...")
+            print("Encerrando o programa como solicitado...")
             break
 
         data = createRequest(int(tipo), generateRandomIdentifier())
 
-        porta_origem = findSourcePort()
+        porta_origem = 0xE713
+        ''' Monta o socket raw usando o socket de internet e o protocolo solicitado'''
         socket_raw = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
         tamanho_pacote_udp = 8 + len(data)    
-        udp_checksum = 0                          
+        udp_checksum = 0x0000                          
         pacote_udp = assembleUDPHeader(porta_origem, PORTA_DESTINO, tamanho_pacote_udp, udp_checksum)
         segmento = pacote_udp + data
 
@@ -162,7 +172,7 @@ def main():
         endereco_destino = (IP_DESTINO, PORTA_DESTINO)       
         socket_raw.sendto(segmento, endereco_destino)
 
-        dados, endereco_origem = socket_raw.recvfrom(2040)    
+        dados, _ = socket_raw.recvfrom(1040)    
         payload = extractPayload(dados)
         resposta = decodeResponse(payload)  
         print(resposta)

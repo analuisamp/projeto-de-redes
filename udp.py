@@ -1,3 +1,11 @@
+#############################################################################
+# PROJETO DE REDES
+# GRUPO: Ana Luisa Miranda Pessoa, Beatriz Saori Kyohara, Helio Lima Correia II
+# PROFESSOR: Fernando Menezes Matos
+# socket UDP
+#############################################################################
+
+
 import types
 import random
 import socket
@@ -24,7 +32,7 @@ def createRequest(type, identifier):
         case consts.SERVER_RESPONSE_COUNT:
             byte1 = byte1 | 0b0010
         case _:
-            byte1 =byte1|0b0011
+            byte1 = byte1 | 0b0011
 
     message = bytes([byte1, bytes_identifier[0], bytes_identifier[1]])
     return message
@@ -34,20 +42,20 @@ def generateRandomIdentifier():
     return random.randint(1, 65535)
 
 def displayOptions():
-    '''Exibe as opções de requisição.'''
-    print("Opções de solicitação:")
-    print("1 -> Data e hora")
-    print("2 -> Uma mensagem motivacional para o final do semestre")
-    print("3 -> A quantidade de respostas emitidas pelo servidor")
-    print("4 -> Sair")
+    '''Exibe as opções de requisição do usuário.'''
+    print("Opções de solicitação para você usuário:")
+    print("1 ==> Exibe a Data e hora atual")
+    print("2 ==> Exibe uma mensagem motivacional para o final do semestre")
+    print("3 ==> Exibe a quantidade de respostas emitidas pelo servidor até o momento")
+    print("4 ==> Sair")
 
 def bytesToString(byte_list):
     '''Converte uma lista de bytes em uma string.'''
     return ''.join(chr(i) for i in byte_list)
 
 def bytesToInt(byte_list):
-    '''Converte uma lista de bytes em um número inteiro.'''
-    return int.from_bytes(bytes(byte_list), byteorder='big')
+    '''Converte uma lista de bytes em um número inteiro utilizando o big endian.'''
+    return int.from_bytes(bytes(byte_list), byteorder = 'big')
 
 def decodeResponse(data):
     '''Decodifica os dados da resposta.'''
@@ -65,24 +73,23 @@ def decodeResponse(data):
 ''' Ponto de entrada principal do programa cliente UDP, que interage com um servidor remoto para realizar solicitações e exibir as respostas correspondentes ao usuário. '''
 def main():
     
-    print("CLIENTE UDP")
+    print("UDP CLIENT VIP")
     displayOptions()  
     
     while True:
-        type = input("Insira a solicitação: ")
+        type = input("Insira uma solicitação válida: ")
         if (type == "4"):
-            print("Encerrando o programa...")
+            print("Encerrando o programa como solicitado...")
             break
-        ''' # Cria o socket UDP '''
-        udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
+        ''' # Cria o socket UDP de internet junto com o sock de diagrama '''
+        udpclient_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
         message = createRequest(int(type), generateRandomIdentifier()) 
-        ''' # Endereço do servidor remoto '''
-        addressDestination = ('15.228.191.109', 50000)  
-        udp_socket.sendto(message, addressDestination)  
-        dados, addressOrigin = udp_socket.recvfrom(2040)  
+        ''' # Endereço do servidor remoto solicitado '''
+        addressDestination = ('15.228.191.109', 0xC350)  
+        udpclient_socket.sendto(message, addressDestination)  
+        dados, _ = udpclient_socket.recvfrom(1040)  
         resposta = decodeResponse(dados) 
         print(resposta)
-        udp_socket.close()
-
+        udpclient_socket.close()
 if __name__ == "__main__":
     main()
